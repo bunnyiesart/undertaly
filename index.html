@@ -134,6 +134,15 @@
     <script>
         // Start the Construct 2 project running on window load.
         jQuery(document).ready(function() {
+            // Reset fightStarted flag on layout start (e.g. game over restart)
+            if (window.cr && cr.system_object && cr.system_object.prototype && cr.system_object.prototype.cnds) {
+                var originalOnLayoutStart = cr.system_object.prototype.cnds.OnLayoutStart;
+                cr.system_object.prototype.cnds.OnLayoutStart = function() {
+                    window.fightStarted = false;
+                    return originalOnLayoutStart.apply(this, arguments);
+                };
+            }
+
             // Override Audio actions for intro vs fight music transition
             if (window.cr && cr.plugins_ && cr.plugins_.Audio) {
                 window.fightStarted = false;
@@ -157,8 +166,10 @@
                     var lowerName = (filename || "").toLowerCase();
                     if ((lowerName === "gasterblaster" || lowerName === "flash") && !window.fightStarted) {
                         window.fightStarted = true;
-                        this.Stop("Music");
-                        this.Play(["mus_zz_megalovania", true], 1, 0, "Music");
+                        if (cr.plugins_.Audio.prototype.acts.Stop) {
+                            cr.plugins_.Audio.prototype.acts.Stop.call(this, "Music");
+                        }
+                        originalPlay.call(this, ["mus_zz_megalovania", true], 1, 0, "Music");
                     }
                     originalPlayByName.call(this, folder, filename, looping, vol, tag);
                 };
