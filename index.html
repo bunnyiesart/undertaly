@@ -153,7 +153,7 @@
                         window.fightStarted = false;
                     }
                     if (file && file[0] === "mus_zz_megalovania" && !window.fightStarted) {
-                        file = ["mus_intro", file[1]];
+                        file = ["mus_intro", true];
                     }
                     originalPlay.call(this, file, looping, vol, tag);
                 };
