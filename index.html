@@ -159,18 +159,15 @@
         // This registers the service worker which caches resources for offline support.
         window.C2_RegisterSW = function C2_RegisterSW() {
             if (!navigator.serviceWorker)
-                return; // no SW support, ignore call
-
+                return;
             try {
-                navigator.serviceWorker.register("sw.js", {
-                        scope: "./"
-                    })
-                    .then(function(reg) {
-                        console.log("Registered service worker on " + reg.scope);
-                    })
-                    .catch(OnRegisterSWError);
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                });
             } catch (e) {
-                OnRegisterSWError(e);
+                console.warn(e);
             }
         };
     </script>
