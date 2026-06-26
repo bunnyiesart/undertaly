@@ -134,6 +134,36 @@
     <script>
         // Start the Construct 2 project running on window load.
         jQuery(document).ready(function() {
+            // Override Audio actions for intro vs fight music transition
+            if (window.cr && cr.plugins_ && cr.plugins_.Audio) {
+                window.fightStarted = false;
+                
+                var originalPlay = cr.plugins_.Audio.prototype.acts.Play;
+                cr.plugins_.Audio.prototype.acts.Play = function(file, looping, vol, tag) {
+                    if (this.runtime.running_layout && this.runtime.running_layout.name !== "Battle") {
+                        window.fightStarted = false;
+                    }
+                    if (file && file[0] === "mus_zz_megalovania" && !window.fightStarted) {
+                        file = ["mus_intro", file[1]];
+                    }
+                    originalPlay.call(this, file, looping, vol, tag);
+                };
+
+                var originalPlayByName = cr.plugins_.Audio.prototype.acts.PlayByName;
+                cr.plugins_.Audio.prototype.acts.PlayByName = function(folder, filename, looping, vol, tag) {
+                    if (this.runtime.running_layout && this.runtime.running_layout.name !== "Battle") {
+                        window.fightStarted = false;
+                    }
+                    var lowerName = (filename || "").toLowerCase();
+                    if ((lowerName === "gasterblaster" || lowerName === "flash") && !window.fightStarted) {
+                        window.fightStarted = true;
+                        this.Stop("Music");
+                        this.Play(["mus_zz_megalovania", true], 1, 0, "Music");
+                    }
+                    originalPlayByName.call(this, folder, filename, looping, vol, tag);
+                };
+            }
+
             // Create new runtime using the c2canvas
             cr_createRuntime("c2canvas");
         });
