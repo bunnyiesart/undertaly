@@ -235,12 +235,11 @@
                 var originalTick = cr.runtime.prototype.tick;
                 cr.runtime.prototype.tick = function() {
                     originalTick.apply(this, arguments);
-                    
                     if (this.running_layout && this.running_layout.name === "BattleScreen") {
-                        var headType = this.types["SansHead"];
-                        var bodyType = this.types["SansBody"];
-                        var torsoType = this.types["SansTorso"];
-                        var legsType = this.types["SansLegs"];
+                        var headType = this.types["SansHead"] || this.types["t24"];
+                        var bodyType = this.types["SansBody"] || this.types["t25"];
+                        var torsoType = this.types["SansTorso"] || this.types["t28"];
+                        var legsType = this.types["SansLegs"] || this.types["t26"];
 
                         var headInst = headType && headType.instances && headType.instances[0];
                         var bodyInst = bodyType && bodyType.instances && bodyType.instances[0];
