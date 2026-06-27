@@ -215,7 +215,7 @@
                                                 if (cr.plugins_.Audio.prototype.acts.Stop) {
                                                     cr.plugins_.Audio.prototype.acts.Stop.call(audioInst, "Music");
                                                 }
-                                                cr.plugins_.Audio.prototype.acts.Play.call(audioInst, ["mus_zz_megalovania", true], 1, 0, "Music");
+                                                cr.plugins_.Audio.prototype.acts.Play.call(audioInst, ["mus_zz_megalovania", true], 1, -6, "Music");
                                             } catch (e) {
                                                 console.error("[Antigravity] Error playing Megalovania early: ", e);
                                             }
@@ -380,7 +380,7 @@
                         file = ["mus_intro", true];
                     }
                     try {
-                        originalPlay.call(this, file, looping, vol, tag);
+                        originalPlay.call(this, file, looping, vol - 6, tag);
                     } catch (e) {
                         console.error("[Antigravity] Error in acts.Play: ", e);
                     }
@@ -394,7 +394,7 @@
                     if (file && file[0] === "mus_zz_megalovania" && !window.fightStarted) {
                         console.log("[Antigravity] Preloading megalovania at start, triggering mus_intro play");
                         try {
-                            cr.plugins_.Audio.prototype.acts.Play.call(this, ["mus_intro", true], 1, 0, "Music");
+                            cr.plugins_.Audio.prototype.acts.Play.call(this, ["mus_intro", true], 1, -6, "Music");
                         } catch (e) {
                             console.error("[Antigravity] Error playing mus_intro during preload: ", e);
                         }
@@ -418,13 +418,13 @@
                             if (cr.plugins_.Audio.prototype.acts.Stop) {
                                 cr.plugins_.Audio.prototype.acts.Stop.call(this, "Music");
                             }
-                            originalPlay.call(this, ["mus_zz_megalovania", true], 1, 0, "Music");
+                            originalPlay.call(this, ["mus_zz_megalovania", true], 1, -6, "Music");
                         } catch (e) {
                             console.error("[Antigravity] Error stopping/playing music: ", e);
                         }
                     }
                     try {
-                        originalPlayByName.call(this, folder, filename, looping, vol, tag);
+                        originalPlayByName.call(this, folder, filename, looping, vol - 6, tag);
                     } catch (e) {
                         console.error("[Antigravity] Error in acts.PlayByName: ", e);
                     }
