@@ -246,6 +246,19 @@
                         var torsoInst = torsoType && torsoType.instances && torsoType.instances[0];
                         var legsInst = legsType && legsType.instances && legsType.instances[0];
 
+                        if (typeof window.sansDebugCounter === "undefined") {
+                            window.sansDebugCounter = 0;
+                        }
+                        window.sansDebugCounter++;
+                        if (window.sansDebugCounter % 180 === 0) {
+                            console.log("[Antigravity Debug] Layout:", this.running_layout.name, 
+                                        "| Head:", headInst ? "Found" : "Missing", 
+                                        "| Body:", bodyInst ? "Found" : "Missing", 
+                                        "| Torso:", torsoInst ? "Found" : "Missing", 
+                                        "| Legs:", legsInst ? "Found" : "Missing",
+                                        "| fightStarted:", window.fightStarted);
+                        }
+
                         var parts = [];
                         if (headInst) parts.push({ inst: headInst, type: "head" });
                         if (bodyInst) parts.push({ inst: bodyInst, type: "body" });
