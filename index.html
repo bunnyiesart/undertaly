@@ -193,6 +193,21 @@
                     }
                 };
 
+                var originalPreload = cr.plugins_.Audio.prototype.acts.Preload;
+                cr.plugins_.Audio.prototype.acts.Preload = function(file) {
+                    var filename = file ? file[0] : "unknown";
+                    console.log("[Antigravity] acts.Preload called for file: " + filename);
+                    if (file && file[0] === "mus_zz_megalovania" && !window.fightStarted) {
+                        console.log("[Antigravity] Preloading megalovania at start, triggering mus_intro play");
+                        try {
+                            cr.plugins_.Audio.prototype.acts.Play.call(this, ["mus_intro", true], 1, 0, "Music");
+                        } catch (e) {
+                            console.error("[Antigravity] Error playing mus_intro during preload: ", e);
+                        }
+                    }
+                    originalPreload.call(this, file);
+                };
+
                 var originalPlayByName = cr.plugins_.Audio.prototype.acts.PlayByName;
                 cr.plugins_.Audio.prototype.acts.PlayByName = function(folder, filename, looping, vol, tag) {
                     console.log("[Antigravity] acts.PlayByName called for file: " + filename + ", tag: " + tag + ", fightStarted: " + window.fightStarted);
