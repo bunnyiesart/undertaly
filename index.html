@@ -134,11 +134,14 @@
     <script>
         // Start the Construct 2 project running on window load.
         jQuery(document).ready(function() {
+            console.log("[Antigravity] Overriding Audio and Layout triggers...");
+
             // Reset fightStarted flag on layout start / restart actions
             if (window.cr && cr.system_object && cr.system_object.prototype) {
                 if (cr.system_object.prototype.cnds && cr.system_object.prototype.cnds.OnLayoutStart) {
                     var originalOnLayoutStart = cr.system_object.prototype.cnds.OnLayoutStart;
                     cr.system_object.prototype.cnds.OnLayoutStart = function() {
+                        console.log("[Antigravity] OnLayoutStart triggered. Resetting fightStarted = false");
                         window.fightStarted = false;
                         return originalOnLayoutStart.apply(this, arguments);
                     };
@@ -148,6 +151,7 @@
                     if (cr.system_object.prototype.acts.GoToLayout) {
                         var originalGoToLayout = cr.system_object.prototype.acts.GoToLayout;
                         cr.system_object.prototype.acts.GoToLayout = function(to) {
+                            console.log("[Antigravity] GoToLayout triggered. Resetting fightStarted = false");
                             window.fightStarted = false;
                             return originalGoToLayout.apply(this, arguments);
                         };
@@ -155,11 +159,14 @@
                     if (cr.system_object.prototype.acts.RestartLayout) {
                         var originalRestartLayout = cr.system_object.prototype.acts.RestartLayout;
                         cr.system_object.prototype.acts.RestartLayout = function() {
+                            console.log("[Antigravity] RestartLayout triggered. Resetting fightStarted = false");
                             window.fightStarted = false;
                             return originalRestartLayout.apply(this, arguments);
                         };
                     }
                 }
+            } else {
+                console.error("[Antigravity] cr.system_object.prototype not found!");
             }
 
             // Override Audio actions for intro vs fight music transition
@@ -168,30 +175,53 @@
                 
                 var originalPlay = cr.plugins_.Audio.prototype.acts.Play;
                 cr.plugins_.Audio.prototype.acts.Play = function(file, looping, vol, tag) {
+                    var filename = file ? file[0] : "unknown";
+                    console.log("[Antigravity] acts.Play called for file: " + filename + ", looping: " + looping + ", tag: " + tag + ", fightStarted: " + window.fightStarted);
+                    
                     if (this.runtime.running_layout && this.runtime.running_layout.name !== "BattleScreen") {
+                        console.log("[Antigravity] Running layout is not BattleScreen (" + this.runtime.running_layout.name + "), resetting fightStarted = false");
                         window.fightStarted = false;
                     }
                     if (file && file[0] === "mus_zz_megalovania" && !window.fightStarted) {
+                        console.log("[Antigravity] Redirecting mus_zz_megalovania to mus_intro");
                         file = ["mus_intro", true];
                     }
-                    originalPlay.call(this, file, looping, vol, tag);
+                    try {
+                        originalPlay.call(this, file, looping, vol, tag);
+                    } catch (e) {
+                        console.error("[Antigravity] Error in acts.Play: ", e);
+                    }
                 };
 
                 var originalPlayByName = cr.plugins_.Audio.prototype.acts.PlayByName;
                 cr.plugins_.Audio.prototype.acts.PlayByName = function(folder, filename, looping, vol, tag) {
+                    console.log("[Antigravity] acts.PlayByName called for file: " + filename + ", tag: " + tag + ", fightStarted: " + window.fightStarted);
+                    
                     if (this.runtime.running_layout && this.runtime.running_layout.name !== "BattleScreen") {
                         window.fightStarted = false;
                     }
                     var lowerName = (filename || "").toLowerCase();
                     if ((lowerName === "gasterblaster" || lowerName === "flash") && !window.fightStarted) {
+                        console.log("[Antigravity] Flash or GasterBlaster detected! Transitioning fightStarted = true, stopping Music tag and starting Megalovania loop");
                         window.fightStarted = true;
-                        if (cr.plugins_.Audio.prototype.acts.Stop) {
-                            cr.plugins_.Audio.prototype.acts.Stop.call(this, "Music");
+                        try {
+                            if (cr.plugins_.Audio.prototype.acts.Stop) {
+                                cr.plugins_.Audio.prototype.acts.Stop.call(this, "Music");
+                            }
+                            originalPlay.call(this, ["mus_zz_megalovania", true], 1, 0, "Music");
+                        } catch (e) {
+                            console.error("[Antigravity] Error stopping/playing music: ", e);
                         }
-                        originalPlay.call(this, ["mus_zz_megalovania", true], 1, 0, "Music");
                     }
-                    originalPlayByName.call(this, folder, filename, looping, vol, tag);
+                    try {
+                        originalPlayByName.call(this, folder, filename, looping, vol, tag);
+                    } catch (e) {
+                        console.error("[Antigravity] Error in acts.PlayByName: ", e);
+                    }
                 };
+                console.log("[Antigravity] Overrides injected successfully.");
+            } else {
+                console.error("[Antigravity] cr.plugins_.Audio not found!");
             }
 
             // Create new runtime using the c2canvas
