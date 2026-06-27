@@ -136,6 +136,30 @@
         jQuery(document).ready(function() {
             console.log("[Antigravity] Overriding Audio, Layout, and Function triggers...");
 
+            // Global Audio instance tracker for runtime-wide control
+            window.audioInstance = null;
+            window.fightStarted = false;
+
+            var getAudioInstance = function(runtime) {
+                if (window.audioInstance) return window.audioInstance;
+                if (runtime && runtime.types && runtime.types.Audio && runtime.types.Audio.instances && runtime.types.Audio.instances.length) {
+                    return runtime.types.Audio.instances[0];
+                }
+                if (runtime && runtime.all_groups) {
+                    for (var i = 0; i < runtime.all_groups.length; i++) {
+                        var instances = runtime.all_groups[i];
+                        if (instances && instances.length) {
+                            for (var j = 0; j < instances.length; j++) {
+                                if (instances[j].type && instances[j].type.name === "Audio") {
+                                    return instances[j];
+                                }
+                            }
+                        }
+                    }
+                }
+                return null;
+            };
+
             // Override Function plugin to support \n replacements and automatic wrapping in SansText parameters
             if (window.cr && cr.plugins_ && cr.plugins_.Function && cr.plugins_.Function.prototype && cr.plugins_.Function.prototype.acts) {
                 var originalCallFunction = cr.plugins_.Function.prototype.acts.CallFunction;
@@ -180,6 +204,23 @@
                             if (typeof params_[i] === "string") {
                                 if (name_ === "SansText") {
                                     params_[i] = wrapSpeechBubbleText(params_[i], 16);
+                                    
+                                    // Stop dialog music and start Megalovania early when "bad time" is displayed
+                                    if (params_[i].includes("bad time") && !window.fightStarted) {
+                                        console.log("[Antigravity] 'bad time' detected in SansText! Transitioning to Megalovania early...");
+                                        window.fightStarted = true;
+                                        var audioInst = getAudioInstance(this.runtime);
+                                        if (audioInst) {
+                                            try {
+                                                if (cr.plugins_.Audio.prototype.acts.Stop) {
+                                                    cr.plugins_.Audio.prototype.acts.Stop.call(audioInst, "Music");
+                                                }
+                                                cr.plugins_.Audio.prototype.acts.Play.call(audioInst, ["mus_zz_megalovania", true], 1, 0, "Music");
+                                            } catch (e) {
+                                                console.error("[Antigravity] Error playing Megalovania early: ", e);
+                                            }
+                                        }
+                                    }
                                 } else {
                                     params_[i] = params_[i].replace(/\\n/g, "\n");
                                 }
@@ -225,10 +266,9 @@
 
             // Override Audio actions for intro vs fight music transition
             if (window.cr && cr.plugins_ && cr.plugins_.Audio) {
-                window.fightStarted = false;
-                
                 var originalPlay = cr.plugins_.Audio.prototype.acts.Play;
                 cr.plugins_.Audio.prototype.acts.Play = function(file, looping, vol, tag) {
+                    window.audioInstance = this;
                     var filename = file ? file[0] : "unknown";
                     console.log("[Antigravity] acts.Play called for file: " + filename + ", looping: " + looping + ", tag: " + tag + ", fightStarted: " + window.fightStarted);
                     
@@ -249,6 +289,7 @@
 
                 var originalPreload = cr.plugins_.Audio.prototype.acts.Preload;
                 cr.plugins_.Audio.prototype.acts.Preload = function(file) {
+                    window.audioInstance = this;
                     var filename = file ? file[0] : "unknown";
                     console.log("[Antigravity] acts.Preload called for file: " + filename);
                     if (file && file[0] === "mus_zz_megalovania" && !window.fightStarted) {
@@ -264,6 +305,7 @@
 
                 var originalPlayByName = cr.plugins_.Audio.prototype.acts.PlayByName;
                 cr.plugins_.Audio.prototype.acts.PlayByName = function(folder, filename, looping, vol, tag) {
+                    window.audioInstance = this;
                     console.log("[Antigravity] acts.PlayByName called for file: " + filename + ", tag: " + tag + ", fightStarted: " + window.fightStarted);
                     
                     if (this.runtime.running_layout && this.runtime.running_layout.name !== "BattleScreen") {
