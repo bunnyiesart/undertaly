@@ -134,13 +134,32 @@
     <script>
         // Start the Construct 2 project running on window load.
         jQuery(document).ready(function() {
-            // Reset fightStarted flag on layout start (e.g. game over restart)
-            if (window.cr && cr.system_object && cr.system_object.prototype && cr.system_object.prototype.cnds) {
-                var originalOnLayoutStart = cr.system_object.prototype.cnds.OnLayoutStart;
-                cr.system_object.prototype.cnds.OnLayoutStart = function() {
-                    window.fightStarted = false;
-                    return originalOnLayoutStart.apply(this, arguments);
-                };
+            // Reset fightStarted flag on layout start / restart actions
+            if (window.cr && cr.system_object && cr.system_object.prototype) {
+                if (cr.system_object.prototype.cnds && cr.system_object.prototype.cnds.OnLayoutStart) {
+                    var originalOnLayoutStart = cr.system_object.prototype.cnds.OnLayoutStart;
+                    cr.system_object.prototype.cnds.OnLayoutStart = function() {
+                        window.fightStarted = false;
+                        return originalOnLayoutStart.apply(this, arguments);
+                    };
+                }
+                
+                if (cr.system_object.prototype.acts) {
+                    if (cr.system_object.prototype.acts.GoToLayout) {
+                        var originalGoToLayout = cr.system_object.prototype.acts.GoToLayout;
+                        cr.system_object.prototype.acts.GoToLayout = function(to) {
+                            window.fightStarted = false;
+                            return originalGoToLayout.apply(this, arguments);
+                        };
+                    }
+                    if (cr.system_object.prototype.acts.RestartLayout) {
+                        var originalRestartLayout = cr.system_object.prototype.acts.RestartLayout;
+                        cr.system_object.prototype.acts.RestartLayout = function() {
+                            window.fightStarted = false;
+                            return originalRestartLayout.apply(this, arguments);
+                        };
+                    }
+                }
             }
 
             // Override Audio actions for intro vs fight music transition
@@ -149,7 +168,7 @@
                 
                 var originalPlay = cr.plugins_.Audio.prototype.acts.Play;
                 cr.plugins_.Audio.prototype.acts.Play = function(file, looping, vol, tag) {
-                    if (this.runtime.running_layout && this.runtime.running_layout.name !== "Battle") {
+                    if (this.runtime.running_layout && this.runtime.running_layout.name !== "BattleScreen") {
                         window.fightStarted = false;
                     }
                     if (file && file[0] === "mus_zz_megalovania" && !window.fightStarted) {
@@ -160,7 +179,7 @@
 
                 var originalPlayByName = cr.plugins_.Audio.prototype.acts.PlayByName;
                 cr.plugins_.Audio.prototype.acts.PlayByName = function(folder, filename, looping, vol, tag) {
-                    if (this.runtime.running_layout && this.runtime.running_layout.name !== "Battle") {
+                    if (this.runtime.running_layout && this.runtime.running_layout.name !== "BattleScreen") {
                         window.fightStarted = false;
                     }
                     var lowerName = (filename || "").toLowerCase();
