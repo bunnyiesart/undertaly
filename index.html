@@ -230,6 +230,93 @@
                     originalCallFunction.call(this, name_, params_);
                 };
             }
+            // Custom tick override for dynamic Sans idle animations in the dialogue phase
+            if (window.cr && cr.runtime && cr.runtime.prototype) {
+                var originalTick = cr.runtime.prototype.tick;
+                cr.runtime.prototype.tick = function() {
+                    originalTick.apply(this, arguments);
+                    
+                    if (this.running_layout && this.running_layout.name === "BattleScreen") {
+                        var headType = this.types["SansHead"];
+                        var bodyType = this.types["SansBody"];
+                        var torsoType = this.types["SansTorso"];
+                        var legsType = this.types["SansLegs"];
+
+                        var headInst = headType && headType.instances && headType.instances[0];
+                        var bodyInst = bodyType && bodyType.instances && bodyType.instances[0];
+                        var torsoInst = torsoType && torsoType.instances && torsoType.instances[0];
+                        var legsInst = legsType && legsType.instances && legsType.instances[0];
+
+                        var parts = [];
+                        if (headInst) parts.push({ inst: headInst, type: "head" });
+                        if (bodyInst) parts.push({ inst: bodyInst, type: "body" });
+                        if (torsoInst) parts.push({ inst: torsoInst, type: "torso" });
+                        if (legsInst) parts.push({ inst: legsInst, type: "legs" });
+
+                        if (!window.fightStarted) {
+                            var t = this.kahanTime.sum; // Get the game time in seconds
+                            
+                            // Calculate offsets
+                            var torsoY = Math.sin(t * 3.5) * 1.2;
+                            var bodyY = torsoY;
+                            var headY = Math.sin(t * 3.5 - 0.6) * 1.8;
+                            var headX = Math.cos(t * 1.75) * 0.8;
+                            var headAngle = Math.cos(t * 1.75) * 0.015;
+
+                            parts.forEach(function(p) {
+                                var inst = p.inst;
+                                // Baseline sync logic
+                                if (inst.baseX === undefined || inst.x !== inst.lastSetX) {
+                                    inst.baseX = inst.x;
+                                }
+                                if (inst.baseY === undefined || inst.y !== inst.lastSetY) {
+                                    inst.baseY = inst.y;
+                                }
+                                if (inst.baseAngle === undefined || inst.angle !== inst.lastSetAngle) {
+                                    inst.baseAngle = inst.angle;
+                                }
+
+                                // Apply offsets based on part type
+                                var ox = 0, oy = 0, oa = 0;
+                                if (p.type === "torso") {
+                                    oy = torsoY;
+                                } else if (p.type === "body") {
+                                    oy = bodyY;
+                                } else if (p.type === "head") {
+                                    ox = headX;
+                                    oy = headY;
+                                    oa = headAngle;
+                                }
+
+                                inst.x = inst.baseX + ox;
+                                inst.y = inst.baseY + oy;
+                                inst.angle = inst.baseAngle + oa;
+
+                                // Save values
+                                inst.lastSetX = inst.x;
+                                inst.lastSetY = inst.y;
+                                inst.lastSetAngle = inst.angle;
+                            });
+                        } else {
+                            // If the fight has started, make sure we restore baseline positions once
+                            parts.forEach(function(p) {
+                                var inst = p.inst;
+                                if (inst.baseX !== undefined) {
+                                    inst.x = inst.baseX;
+                                    inst.y = inst.baseY;
+                                    inst.angle = inst.baseAngle || 0;
+                                    delete inst.baseX;
+                                    delete inst.baseY;
+                                    delete inst.baseAngle;
+                                    delete inst.lastSetX;
+                                    delete inst.lastSetY;
+                                    delete inst.lastSetAngle;
+                                }
+                            });
+                        }
+                    }
+                };
+            }
 
             // Reset fightStarted flag on layout start / restart actions
             if (window.cr && cr.system_object && cr.system_object.prototype) {
