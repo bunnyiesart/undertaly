@@ -134,7 +134,61 @@
     <script>
         // Start the Construct 2 project running on window load.
         jQuery(document).ready(function() {
-            console.log("[Antigravity] Overriding Audio and Layout triggers...");
+            console.log("[Antigravity] Overriding Audio, Layout, and Function triggers...");
+
+            // Override Function plugin to support \n replacements and automatic wrapping in SansText parameters
+            if (window.cr && cr.plugins_ && cr.plugins_.Function && cr.plugins_.Function.prototype && cr.plugins_.Function.prototype.acts) {
+                var originalCallFunction = cr.plugins_.Function.prototype.acts.CallFunction;
+                
+                var wrapSpeechBubbleText = function(text, maxLen) {
+                    if (!text) return "";
+                    // Replaces literal "\n" strings (e.g. from raw CSV or code) with real newlines first
+                    text = text.replace(/\\n/g, "\n");
+                    
+                    var lines = text.split("\n");
+                    var resultLines = [];
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i].trim();
+                        if (line.length <= maxLen) {
+                            resultLines.push(line);
+                        } else {
+                            var words = line.split(/\s+/);
+                            var currentLine = "";
+                            for (var j = 0; j < words.length; j++) {
+                                var word = words[j];
+                                if (!word) continue;
+                                if (currentLine === "") {
+                                    currentLine = word;
+                                } else if ((currentLine + " " + word).length <= maxLen) {
+                                    currentLine += " " + word;
+                                } else {
+                                    resultLines.push(currentLine);
+                                    currentLine = word;
+                                }
+                            }
+                            if (currentLine !== "") {
+                                resultLines.push(currentLine);
+                            }
+                        }
+                    }
+                    return resultLines.join("\n");
+                };
+
+                cr.plugins_.Function.prototype.acts.CallFunction = function(name_, params_) {
+                    if (params_ && params_.length) {
+                        for (var i = 0; i < params_.length; i++) {
+                            if (typeof params_[i] === "string") {
+                                if (name_ === "SansText") {
+                                    params_[i] = wrapSpeechBubbleText(params_[i], 16);
+                                } else {
+                                    params_[i] = params_[i].replace(/\\n/g, "\n");
+                                }
+                            }
+                        }
+                    }
+                    originalCallFunction.call(this, name_, params_);
+                };
+            }
 
             // Reset fightStarted flag on layout start / restart actions
             if (window.cr && cr.system_object && cr.system_object.prototype) {

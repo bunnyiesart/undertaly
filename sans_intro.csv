@@ -21,7 +21,21 @@
 0.1,SansText,says he wants to marry you.,,,,,,,
 0.1,SansText,build a family...,,,,,,,
 0.1,SansText,the whole nine yards.,,,,,,,
+0.1,SansText,he even bought a ring.,,,,,,,
+0,SansHead,ClosedEyes,,,,,,,
+0.1,SansText,can you believe that?,,,,,,,
+0,SansHead,Default,,,,,,,
+0.1,SansText,he's really serious about you.,,,,,,,
+0.1,SansText,so...,,,,,,,
+0,SansHead,ClosedEyes,,,,,,,
+0.1,SansText,i've gotta ask you something.,,,,,,,
+0,SansHead,Default,,,,,,,
+0.1,SansText,do you feel the same way?,,,,,,,
 0,SansHead,NoEyes,,,,,,,
+0.5,SansText,...,,,,,,,
+0.1,SansText,no response, huh?,,,,,,,
+0,SansHead,Default,,,,,,,
+0.1,SansText,well...,,,,,,,
 0.1,SansText,but honestly?,,,,,,,
 0.1,SansText,i like that boy...,,,,,,,
 0.1,SansText,a little too much.,,,,,,,
@@ -55,7 +69,7 @@
 0,GasterBlaster,1,640,0,449,176,135,0.333,0.26666
 0,GasterBlaster,1,640,480,449,436,225,0.333,0.26666
 0,GasterBlaster,1,0,480,189,436,315,0.333,0.26666
-0.9,GasterBlaster,1,0,0,189,246,0,0.333,0.26666
+0.9,GasterBlaster,1,0,0,189,246,0.333,0.26666
 0,GasterBlaster,1,0,0,259,166,90,0.333,0.26666
 0,GasterBlaster,1,640,480,449,366,180,0.333,0.26666
 0,GasterBlaster,1,640,480,379,446,270,0.333,0.26666
@@ -63,4 +77,4 @@
 0,GasterBlaster,2,640,240,499,306,180,0.666,0.5
 3,SansHead,Default,,,,,,,
 0,SansText,here we go.,,,,,,,
-0,EndAttack,,,,,,,,
+66,EndAttack,,,,,,,,
